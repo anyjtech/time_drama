@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ANYJ Cue Timeline</title>
+<style>
+    *{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI,Arial,sans-serif;
+}
+
+body{
+background:#0f172a;
+color:#fff;
+min-height:100vh;
+}
+
+header{
+background:#1e293b;
+padding:20px;
+text-align:center;
+border-bottom:2px solid #334155;
+}
+
+header h1{
+font-size:32px;
+color:#38bdf8;
+}
+
+header p{
+margin-top:5px;
+color:#cbd5e1;
+}
+
+.toolbar{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:10px;
+padding:20px;
+background:#111827;
+border-bottom:1px solid #334155;
+}
+
+.toolbar input{
+padding:8px;
+background:#1e293b;
+color:#fff;
+border:1px solid #334155;
+border-radius:8px;
+}
+
+.toolbar button{
+padding:10px 20px;
+border:none;
+border-radius:8px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+transition:.2s;
+}
+
+#btnImport{
+background:#2563eb;
+color:#fff;
+}
+
+#btnStart{
+background:#16a34a;
+color:#fff;
+}
+
+#btnStop{
+background:#dc2626;
+color:#fff;
+}
+
+#btnReset{
+background:#f59e0b;
+color:#000;
+}
+
+.toolbar button:hover{
+transform:scale(1.05);
+}
+
+main{
+width:95%;
+margin:auto;
+padding:20px;
+}
+
+.display{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+gap:20px;
+margin-bottom:30px;
+}
+
+.timer-box,
+.cue-box,
+.scene-box,
+.action-box,
+.music-box,
+.volume-box,
+.next-box{
+background:#1e293b;
+border:2px solid #334155;
+border-radius:15px;
+padding:20px;
+text-align:center;
+box-shadow:0 0 15px rgba(0,0,0,.3);
+}
+
+.label{
+font-size:18px;
+color:#94a3b8;
+margin-bottom:15px;
+}
+
+#elapsed{
+font-size:70px;
+font-weight:bold;
+color:#22c55e;
+}
+
+#cue{
+font-size:60px;
+font-weight:bold;
+color:#facc15;
+}
+
+#scene{
+font-size:36px;
+font-weight:bold;
+color:#38bdf8;
+}
+
+#action{
+font-size:32px;
+font-weight:bold;
+color:#fb923c;
+}
+
+#music{
+font-size:24px;
+color:#ffffff;
+word-break:break-word;
+}
+
+#volume{
+font-size:45px;
+font-weight:bold;
+color:#ef4444;
+}
+
+#nextCue{
+font-size:28px;
+font-weight:bold;
+color:#a78bfa;
+}
+
+.progress-area{
+grid-column:1/-1;
+}
+
+progress{
+width:100%;
+height:28px;
+}
+
+.timeline{
+background:#1e293b;
+padding:20px;
+border-radius:15px;
+border:2px solid #334155;
+overflow:auto;
+}
+
+.timeline h2{
+margin-bottom:20px;
+text-align:center;
+color:#38bdf8;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+thead{
+background:#2563eb;
+}
+
+th{
+padding:12px;
+font-size:17px;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #334155;
+text-align:center;
+}
+
+tbody tr:nth-child(even){
+background:#172033;
+}
+
+tbody tr:hover{
+background:#334155;
+}
+
+.activeCue{
+background:#22c55e !important;
+color:#000;
+font-weight:bold;
+}
+
+footer{
+margin-top:30px;
+padding:15px;
+background:#111827;
+text-align:center;
+color:#94a3b8;
+}
+
+@media(max-width:768px){
+
+#elapsed{
+font-size:48px;
+}
+
+#cue{
+font-size:42px;
+}
+
+#scene{
+font-size:28px;
+}
+
+#action{
+font-size:24px;
+}
+
+#music{
+font-size:18px;
+}
+
+#volume{
+font-size:34px;
+}
+
+#nextCue{
+font-size:22px;
+}
+
+th,
+td{
+font-size:13px;
+padding:8px;
+}
+
+.toolbar{
+flex-direction:column;
+align-items:center;
+}
+
+.toolbar button,
+.toolbar input{
+width:95%;
+}
+
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>ANYJ Cue Timeline</h1>
+
+<p>Drama Musikal Operator</p>
+
+</header>
+
+<div class="toolbar">
+
+<input
+type="file"
+id="excelFile"
+accept=".xlsx,.xls"
+>
+
+<button id="btnImport">Import Excel</button>
+
+<button id="btnStart">START</button>
+
+<button id="btnStop">STOP</button>
+
+<button id="btnReset">RESET</button>
+
+</div>
+
+<main>
+
+<section class="display">
+
+<div class="timer-box">
+
+<div class="label">
+Elapsed Time
+</div>
+
+<div id="elapsed">
+00:00
+</div>
+
+</div>
+
+<div class="cue-box">
+
+<div class="label">
+Current Cue
+</div>
+
+<div id="cue">
+-
+</div>
+
+</div>
+
+<div class="scene-box">
+
+<div class="label">
+Adegan
+</div>
+
+<div id="scene">
+-
+</div>
+
+</div>
+
+<div class="action-box">
+
+<div class="label">
+Aksi
+</div>
+
+<div id="action">
+-
+</div>
+
+</div>
+
+<div class="music-box">
+
+<div class="label">
+Musik
+</div>
+
+<div id="music">
+-
+</div>
+
+</div>
+
+<div class="volume-box">
+
+<div class="label">
+Volume
+</div>
+
+<div id="volume">
+-
+</div>
+
+</div>
+
+<div class="next-box">
+
+<div class="label">
+Next Cue
+</div>
+
+<div id="nextCue">
+-
+</div>
+
+</div>
+
+<div class="progress-area">
+
+<progress
+id="progress"
+value="0"
+max="100">
+</progress>
+
+</div>
+
+</section>
+
+<section class="timeline">
+
+<h2>Timeline Cue</h2>
+
+<table id="timelineTable">
+
+<thead>
+
+<tr>
+
+<th>Cue</th>
+
+<th>Waktu</th>
+
+<th>Adegan</th>
+
+<th>Musik</th>
+
+<th>Volume</th>
+
+<th>Aksi</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+</tbody>
+
+</table>
+
+</section>
+
+</main>
+
+<footer>
+
+ANYJ Tech © 2026
+
+</footer>
+
+<script>
+    /* ===========================
+   ANYJ Cue Timeline
+   Script Bagian 1
+=========================== */
+
+let schedule = [];
+
+let running = false;
+
+let startTime = null;
+
+let timer = null;
+
+let usedCue = {};
+
+let currentIndex = -1;
+
+
+/* ===========================
+   LOAD LOCAL STORAGE
+=========================== */
+
+window.onload = function(){
+
+const data = localStorage.getItem("cueTimeline");
+
+if(data){
+
+schedule = JSON.parse(data);
+
+renderTable();
+
+}
+
+}
+
+
+/* ===========================
+   IMPORT EXCEL
+=========================== */
+
+document.getElementById("btnImport").onclick=function(){
+
+document.getElementById("excelFile").click();
+
+};
+
+
+document.getElementById("excelFile").addEventListener("change",importExcel);
+
+
+function importExcel(e){
+
+const file=e.target.files[0];
+
+if(!file){
+
+return;
+
+}
+
+const reader=new FileReader();
+
+reader.onload=function(evt){
+
+const data=new Uint8Array(evt.target.result);
+
+const workbook=XLSX.read(data,{type:"array"});
+
+const sheetName=workbook.SheetNames[0];
+
+const sheet=workbook.Sheets[sheetName];
+
+const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+
+schedule=[];
+
+for(let i=1;i<rows.length;i++){
+
+const row=rows[i];
+
+if(row.length<6){
+
+continue;
+
+}
+
+const time=row[1].toString().trim();
+
+const part=time.split(":");
+
+let minute=0;
+
+let second=0;
+
+if(part.length===2){
+
+minute=parseInt(part[0]);
+
+second=parseInt(part[1]);
+
+}
+
+schedule.push({
+
+cue:row[0],
+
+time:time,
+
+minute:minute,
+
+second:second,
+
+scene:row[2],
+
+music:row[3],
+
+volume:row[4],
+
+action:row[5]
+
+});
+
+}
+
+schedule.sort(function(a,b){
+
+return(a.minute*60+a.second)-(b.minute*60+b.second);
+
+});
+
+localStorage.setItem(
+
+"cueTimeline",
+
+JSON.stringify(schedule)
+
+);
+
+renderTable();
+
+alert("Import Excel berhasil.");
+
+};
+
+reader.readAsArrayBuffer(file);
+
+}
+
+
+/* ===========================
+   TAMPILKAN TABEL
+=========================== */
+
+function renderTable(){
+
+const tbody=document.querySelector("#timelineTable tbody");
+
+tbody.innerHTML="";
+
+schedule.forEach(function(item,index){
+
+const tr=document.createElement("tr");
+
+tr.id="row_"+index;
+
+tr.innerHTML=`
+
+<td>${item.cue}</td>
+
+<td>${item.time}</td>
+
+<td>${item.scene}</td>
+
+<td>${item.music}</td>
+
+<td>${item.volume}</td>
+
+<td>${item.action}</td>
+
+`;
+
+tbody.appendChild(tr);
+
+});
+
+}
+
+
+/* ===========================
+   RESET DISPLAY
+=========================== */
+
+function resetDisplay(){
+
+document.getElementById("cue").innerText="-";
+
+document.getElementById("scene").innerText="-";
+
+document.getElementById("action").innerText="-";
+
+document.getElementById("music").innerText="-";
+
+document.getElementById("volume").innerText="-";
+
+document.getElementById("nextCue").innerText="-";
+
+document.getElementById("elapsed").innerText="00:00";
+
+document.getElementById("progress").value=0;
+
+}
+/* ===========================
+   ANYJ Cue Timeline
+   Script Bagian 2
+=========================== */
+
+
+/* ===========================
+   EVENT BUTTON
+=========================== */
+
+document.getElementById("btnStart").onclick = startTimer;
+
+document.getElementById("btnStop").onclick = stopTimer;
+
+document.getElementById("btnReset").onclick = resetTimer;
+
+
+/* ===========================
+   START TIMER
+=========================== */
+
+function startTimer(){
+
+if(schedule.length===0){
+
+alert("Silakan import file Excel terlebih dahulu.");
+
+return;
+
+}
+
+if(running){
+
+return;
+
+}
+
+running=true;
+
+startTime=new Date();
+
+usedCue={};
+
+currentIndex=-1;
+
+timer=setInterval(updateTimer,1000);
+
+}
+
+
+/* ===========================
+   STOP TIMER
+=========================== */
+
+function stopTimer(){
+
+running=false;
+
+clearInterval(timer);
+
+}
+
+
+/* ===========================
+   RESET TIMER
+=========================== */
+
+function resetTimer(){
+
+running=false;
+
+clearInterval(timer);
+
+usedCue={};
+
+currentIndex=-1;
+
+resetDisplay();
+
+removeHighlight();
+
+}
+
+
+/* ===========================
+   UPDATE TIMER
+=========================== */
+
+function updateTimer(){
+
+if(!running){
+
+return;
+
+}
+
+const now=new Date();
+
+const diff=Math.floor((now-startTime)/1000);
+
+const minute=Math.floor(diff/60);
+
+const second=diff%60;
+
+document.getElementById("elapsed").innerText=
+
+String(minute).padStart(2,"0")
+
++":"
+
++
+
+String(second).padStart(2,"0");
+
+checkCue(minute,second);
+
+updateProgress(diff);
+
+}
+
+
+/* ===========================
+   PROGRESS BAR
+=========================== */
+
+function updateProgress(secondNow){
+
+if(schedule.length===0){
+
+return;
+
+}
+
+const last=schedule[schedule.length-1];
+
+const total=(last.minute*60)+last.second;
+
+if(total<=0){
+
+return;
+
+}
+
+let persen=(secondNow/total)*100;
+
+if(persen>100){
+
+persen=100;
+
+}
+
+document.getElementById("progress").value=persen;
+
+}
+
+
+/* ===========================
+   HAPUS HIGHLIGHT
+=========================== */
+
+function removeHighlight(){
+
+const rows=document.querySelectorAll("#timelineTable tbody tr");
+
+rows.forEach(function(row){
+
+row.classList.remove("activeCue");
+
+});
+
+}
+/* ===========================
+   ANYJ Cue Timeline
+   Script Bagian 3
+=========================== */
+
+
+/* ===========================
+   CEK CUE
+=========================== */
+
+function checkCue(currentMinute,currentSecond){
+
+for(let i=0;i<schedule.length;i++){
+
+const item=schedule[i];
+
+if(
+item.minute===currentMinute &&
+item.second===currentSecond &&
+!usedCue[item.cue]
+){
+
+usedCue[item.cue]=true;
+
+currentIndex=i;
+
+showCue(i);
+
+break;
+
+}
+
+}
+
+}
+
+
+/* ===========================
+   TAMPILKAN CUE
+=========================== */
+
+function showCue(index){
+
+const item=schedule[index];
+
+document.getElementById("cue").innerText=item.cue;
+
+document.getElementById("scene").innerText=item.scene;
+
+document.getElementById("action").innerText=item.action;
+
+document.getElementById("music").innerText=item.music;
+
+document.getElementById("volume").innerText=item.volume;
+
+highlightRow(index);
+
+showNextCue(index);
+
+}
+
+
+/* ===========================
+   HIGHLIGHT BARIS
+=========================== */
+
+function highlightRow(index){
+
+removeHighlight();
+
+const row=document.getElementById("row_"+index);
+
+if(row){
+row.classList.add("activeCue");
+
+}
+
+}
+
+
+/* ===========================
+   NEXT CUE
+=========================== */
+
+function showNextCue(index){
+
+if(index>=schedule.length-1){
+
+document.getElementById("nextCue").innerHTML=
+
+"<b>SELESAI</b>";
+
+return;
+
+}
+
+const next=schedule[index+1];
+
+document.getElementById("nextCue").innerHTML=
+
+"<b>"+next.cue+"</b><br>"+
+
+next.time+"<br>"+
+
+next.scene;
+
+}
+
+
+/* ===========================
+   COUNTDOWN NEXT CUE
+=========================== */
+
+setInterval(function(){
+
+if(!running) return;
+
+if(currentIndex<0) return;
+
+if(currentIndex>=schedule.length-1) return;
+
+const now=new Date();
+
+const elapsed=Math.floor((now-startTime)/1000);
+
+const next=schedule[currentIndex+1];
+
+const target=(next.minute*60)+next.second;
+
+let remain=target-elapsed;
+
+if(remain<0){
+
+remain=0;
+
+}
+
+const m=Math.floor(remain/60);
+
+const s=remain%60;
+
+document.getElementById("nextCue").innerHTML=
+
+"<b>"+next.cue+"</b><br>"+
+
+next.time+"<br>"+
+
+next.scene+
+
+"<br><br>Countdown : "+
+
+String(m).padStart(2,"0")+
+
+":"+
+
+String(s).padStart(2,"0");
+
+},1000);
+
+
+/* ===========================
+   AKHIR PERTUNJUKAN
+=========================== */
+
+setInterval(function(){
+
+if(!running) return;
+
+if(schedule.length===0) return;
+
+const now=new Date();
+
+const elapsed=Math.floor((now-startTime)/1000);
+
+const last=schedule[schedule.length-1];
+
+const finish=(last.minute*60)+last.second;
+
+if(elapsed>finish){
+
+running=false;
+
+clearInterval(timer);
+
+alert("Timeline selesai.");
+
+}
+
+},1000);
+</script>
+
+</body>
+</html>
